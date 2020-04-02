@@ -11,7 +11,6 @@
 #include "window.h"
 #include "filehandling.h"
 #include "cards.h"
-#include <codecvt>
 #include <algorithm>
 
 GdiFont* font;
