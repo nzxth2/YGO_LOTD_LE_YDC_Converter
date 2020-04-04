@@ -1,4 +1,4 @@
-# YGO LOTD Link Evolution YDC Converter Editor
+# YGO LOTD Link Evolution YDC Converter
  Converter for .ydc deck files of Yu-Gi-Oh! Legacy of the Duelist Link Evolution 
 
 ## Features
