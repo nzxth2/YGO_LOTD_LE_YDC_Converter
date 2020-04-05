@@ -7,6 +7,7 @@
  - Allows for modification of existing decks or addition of new decks
  - Deck size check is optional, disable at your own risk
  - If a card in a .txt file can not be identified, it will be recorded in missingCards.txt
+ - Check the /extra directory in the repository for a mass-converted list of all decks
   
  ### TXT File Format
  ```
