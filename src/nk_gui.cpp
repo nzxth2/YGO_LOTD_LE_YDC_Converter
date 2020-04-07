@@ -162,7 +162,7 @@ void HandleGui(){
                         std::vector<std::string> extraCards;
                         int sideCount=0;
                         std::vector<std::string> sideCards;
-                        int unknownValue=0;
+                        int unknownValue=0x648C;
                         bool readableDeck=false;
                         std::vector<std::string> missingMain;
                         std::vector<std::string> missingExtra;
