@@ -6,7 +6,7 @@
  - Converts said .txt files back to .ydc files
  - Allows for modification of existing decks or addition of new decks
  - Deck size check is optional, disable at your own risk
- - Capitalization and spacing in .txt files is ignored while converting to .ydc, so you don't have to worry about that
+ - Capitalization and spacing in .txt files are ignored while converting to .ydc, so you don't have to worry about that
  - If a card in a .txt file can not be identified, it will be recorded in missingCards.txt
  - Check the /extra directory in the repository for a mass-converted list of all decks
   
