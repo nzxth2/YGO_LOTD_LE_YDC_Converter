@@ -21,3 +21,4 @@ void WriteInt(std::ofstream &file, Int value);
 void WriteLong(std::ofstream &file, Long value);
 
 std::string SimplifyString(const std::string &string);
+std::string StringToLower(const std::string &string);

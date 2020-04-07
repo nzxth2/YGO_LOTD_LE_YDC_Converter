@@ -12,6 +12,7 @@
 #include "filehandling.h"
 #include "cards.h"
 #include <algorithm>
+#include <set>
 
 GdiFont* font;
 struct nk_context *ctx;
@@ -175,8 +176,9 @@ void HandleGui(){
                                         infoString="Could not read whole deck list. Make sure Main, Extra and Side Deck count is correct";
                                     }else{
                                         for (int i=1; i<1+mainCount; i++){
-                                            if (name_to_ID.count(lines[i])==1){
-                                                mainCards.push_back(lines[i]);
+                                            std::string cardName=StringToLower(lines[i]);
+                                            if (name_to_ID.count(cardName)==1){
+                                                mainCards.push_back(cardName);
                                             }else{
                                                 missingMain.push_back(lines[i]);
                                             }
@@ -188,8 +190,9 @@ void HandleGui(){
                                                 infoString="Could not read whole deck list. Make sure Main, Extra and Side Deck count is correct";
                                             }else{
                                                 for (int i=1+mainCount+1; i<1+mainCount+1+extraCount; i++){
-                                                    if (name_to_ID.count(lines[i])==1){
-                                                        extraCards.push_back(lines[i]);
+                                                    std::string cardName=StringToLower(lines[i]);
+                                                    if (name_to_ID.count(cardName)==1){
+                                                        extraCards.push_back(cardName);
                                                     }else{
                                                         missingExtra.push_back(lines[i]);
                                                     }
@@ -200,8 +203,9 @@ void HandleGui(){
                                                         infoString="Could not read whole deck list. Make sure Main, Extra and Side Deck count is correct";
                                                     }else{
                                                         for (int i=1+mainCount+1+extraCount+1;i<1+mainCount+1+extraCount+1+sideCount;i++){
-                                                            if (name_to_ID.count(lines[i])==1){
-                                                                sideCards.push_back(lines[i]);
+                                                            std::string cardName=StringToLower(lines[i]);
+                                                            if (name_to_ID.count(cardName)==1){
+                                                                sideCards.push_back(cardName);
                                                             }else{
                                                                 missingSide.push_back(lines[i]);
                                                             }

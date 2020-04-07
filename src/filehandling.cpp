@@ -61,7 +61,6 @@ void WriteLong(std::ofstream &file, Long value){
     file.write((char*)(bytes.data()),8);
 }
 
-
 std::string SimplifyString(const std::string &string){
     std::size_t firstPos=string.find_first_not_of("\t\n\v\f\r ");
     std::size_t lastPos=string.find_last_not_of("\t\n\v\f\r ");
@@ -86,4 +85,14 @@ std::string SimplifyString(const std::string &string){
         }
         return result;
     }
+}
+
+std::string StringToLower(const std::string &string){
+    std::string result;
+    for(auto elem : string){
+        if (elem!=' '){
+            result+=std::tolower(elem);
+        }
+    }
+    return result;
 }
