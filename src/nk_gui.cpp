@@ -110,22 +110,22 @@ void HandleGui(){
                         if (!txtFilename.empty()){
                             std::ofstream txtFile(txtFilename);
                             if (txtFile.is_open()){
-                                txtFile << "# main deck. first the card count, then the list\n";
-                                txtFile << mainCount << "\n";
+                                txtFile << "[main]\n";
+                                //txtFile << mainCount << "\n";
                                 for (int i=0; i<mainCount; i++){
                                     txtFile << ID_to_name[mainIDs[i]] << "\n";
                                 }
-                                txtFile << "# extra deck. first the card count, then the list\n";
-                                txtFile << extraCount << "\n";
+                                txtFile << "[extra]\n";
+                                //txtFile << extraCount << "\n";
                                 for (int i=0; i<extraCount; i++){
                                     txtFile << ID_to_name[extraIDs[i]] << "\n";
                                 }
-                                txtFile << "# side deck. first the card count, then the list\n";
-                                txtFile << sideCount << "\n";
+                                txtFile << "[side]\n";
+                                //txtFile << sideCount << "\n";
                                 for (int i=0; i<sideCount; i++){
-                                    txtFile << ID_to_name[sideIDs[i]] << "\n";
+                                    //txtFile << ID_to_name[sideIDs[i]] << "\n";
                                 }
-                                txtFile << "# unknown value. leave it as it is or set it to 0\n";
+                                txtFile << "[unknown]\n";
                                 txtFile << unknownValue;
                                 txtFile.close();
                                 infoString="Successfully exported the deck to "+txtFilename;
@@ -156,159 +156,144 @@ void HandleGui(){
                             }
                         }
                         txtFile.close();
-                        int mainCount=0;
-                        std::vector<std::string> mainCards; 
-                        int extraCount=0;
+                        std::vector<std::string> mainCards;
                         std::vector<std::string> extraCards;
-                        int sideCount=0;
                         std::vector<std::string> sideCards;
                         int unknownValue=0x648C;
                         bool readableDeck=false;
                         std::vector<std::string> missingMain;
                         std::vector<std::string> missingExtra;
                         std::vector<std::string> missingSide;
+                        int parseMode=0; //0=None, 1=Main, 2=Extra, 3=Side, 4=unknownValue
                         if (lines.empty()){
-                                infoString="Deck contains no cards, please check your .txt file!";
+                            infoString="Deck contains no cards, please check your .txt file!";
+                        }else{
+                            for (int i=0; i<lines.size();i++){
+                                if (lines[i]=="[main]")
+                                    parseMode=1;
+                                else if (lines[i]=="[extra]")
+                                    parseMode=2;
+                                else if (lines[i]=="[side]")
+                                    parseMode=3;
+                                else if (lines[i]=="[unknown]")
+                                    parseMode=4;
+                                else{
+                                    if (parseMode==4){
+                                        if (std::all_of(lines[i].begin(), lines[i].end(), ::isdigit)){
+                                            unknownValue=std::stoi(lines[i]);
+                                        }
+                                    }else{
+                                        std::string cardName=StringToLower(lines[i]);
+                                        bool cardExists=name_to_ID.count(cardName)==1;
+                                        if (cardExists){
+                                            switch(parseMode){
+                                                case 1:
+                                                    mainCards.push_back(cardName);
+                                                    break;
+                                                case 2:
+                                                    extraCards.push_back(cardName);
+                                                    break;
+                                                case 3:
+                                                    sideCards.push_back(cardName);
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                        }else{
+                                            switch(parseMode){
+                                                case 1:
+                                                    missingMain.push_back(cardName);
+                                                    break;
+                                                case 2:
+                                                    missingExtra.push_back(cardName);
+                                                    break;
+                                                case 3:
+                                                    missingSide.push_back(cardName);
+                                                    break;
+                                                default:
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                    
+                                }
+                            }
+                        }
+                        bool abort=false;
+                        if (!checkedDontCheckDeckSize){
+                            if (mainCards.size() <40 || mainCards.size() >60){
+                                infoString="Main Deck must be between 40 and 60 cards";
+                                abort=true;
+                            }else if (extraCards.size() <0 || extraCards.size() >15){
+                                infoString="Extra Deck must be between 0 and 15 cards";
+                                abort=true;
+                            }else if (sideCards.size() <0 || sideCards.size() >15){
+                                infoString="Side Deck must be between 0 and 15 cards";
+                                abort=true;
+                            }
+                            if (abort){
+                                std::ofstream missingFile("missingCards.txt");
+                                if (missingFile.is_open()){
+                                    for (int i=0;i<missingMain.size();i++){
+                                        missingFile << missingMain[i] << "\n";
+                                    }
+                                    for (int i=0;i<missingExtra.size();i++){
+                                        missingFile << missingExtra[i] << "\n";
+                                    }
+                                    for (int i=0;i<missingSide.size();i++){
+                                        missingFile << missingSide[i] << "\n";
+                                    }
+                                    missingFile.close();
+                                    infoString+=", check missingCards.txt for omitted cards";
+                                }else{
+                                    infoString+=", also note that some cards could not be identified";
+                                }
+                            }
+                        }
+                        if (!abort){
+                            std::string ydcFilename=SaveFilename("YGO LOTD LE YDC Deck Files (*.ydc)\0*.*\0");
+                            if (!ydcFilename.empty()){
+                                std::ofstream ydcFile(ydcFilename,std::ios::out|std::ios::binary);
+                                if (ydcFile.is_open()){
+                                    WriteLong(ydcFile,unknownValue);
+                                    WriteShort(ydcFile,mainCards.size());
+                                    for (int i=0;i< mainCards.size();i++){
+                                        WriteShort(ydcFile,name_to_ID[mainCards[i]]);
+                                    }
+                                    WriteShort(ydcFile,extraCards.size());
+                                    for (int i=0;i< extraCards.size();i++){
+                                        WriteShort(ydcFile,name_to_ID[extraCards[i]]);
+                                    }
+                                    WriteShort(ydcFile,sideCards.size());
+                                    for (int i=0;i< sideCards.size();i++){
+                                        WriteShort(ydcFile,name_to_ID[sideCards[i]]);
+                                    }
+                                    ydcFile.close();
+                                    if (missingMain.empty() && missingExtra.empty() && missingSide.empty()){
+                                        infoString="Successfully exported the deck to "+ydcFilename;
+                                    }else{
+                                        std::ofstream missingFile("missingCards.txt");
+                                        if (missingFile.is_open()){
+                                            for (int i=0;i<missingMain.size();i++){
+                                                missingFile << missingMain[i] << "\n";
+                                            }
+                                            for (int i=0;i<missingExtra.size();i++){
+                                                missingFile << missingExtra[i] << "\n";
+                                            }
+                                            for (int i=0;i<missingSide.size();i++){
+                                                missingFile << missingSide[i] << "\n";
+                                            }
+                                            missingFile.close();
+                                            infoString="Partially exported deck to "+ydcFilename+", check missingCards.txt for omitted cards";
+                                        }else{
+                                            infoString="Partially exported deck to "+ydcFilename+", but some cards could not be identified";
+                                        }
+                                    }
+                                }else{
+                                    infoString="Unable to open " + ydcFilename;
+                                }
                             }else{
-                                if (std::all_of(lines[0].begin(), lines[0].end(), ::isdigit)){
-                                    mainCount=std::stoi(lines[0]);
-                                    if (lines.size()<1+mainCount+1){
-                                        infoString="Could not read whole deck list. Make sure Main, Extra and Side Deck count is correct";
-                                    }else{
-                                        for (int i=1; i<1+mainCount; i++){
-                                            std::string cardName=StringToLower(lines[i]);
-                                            if (name_to_ID.count(cardName)==1){
-                                                mainCards.push_back(cardName);
-                                            }else{
-                                                missingMain.push_back(lines[i]);
-                                            }
-                                            
-                                        }
-                                        if (std::all_of(lines[1+mainCount].begin(), lines[1+mainCount].end(), ::isdigit)){
-                                            extraCount=std::stoi(lines[1+mainCount]);
-                                            if (lines.size()<1+mainCount+1+extraCount+1){
-                                                infoString="Could not read whole deck list. Make sure Main, Extra and Side Deck count is correct";
-                                            }else{
-                                                for (int i=1+mainCount+1; i<1+mainCount+1+extraCount; i++){
-                                                    std::string cardName=StringToLower(lines[i]);
-                                                    if (name_to_ID.count(cardName)==1){
-                                                        extraCards.push_back(cardName);
-                                                    }else{
-                                                        missingExtra.push_back(lines[i]);
-                                                    }
-                                                }
-                                                if (std::all_of(lines[1+mainCount+1+extraCount].begin(), lines[1+mainCount+1+extraCount].end(), ::isdigit)){
-                                                    sideCount=std::stoi(lines[1+mainCount+1+extraCount]);
-                                                    if (lines.size()<1+mainCount+1+extraCount+1+sideCount){
-                                                        infoString="Could not read whole deck list. Make sure Main, Extra and Side Deck count is correct";
-                                                    }else{
-                                                        for (int i=1+mainCount+1+extraCount+1;i<1+mainCount+1+extraCount+1+sideCount;i++){
-                                                            std::string cardName=StringToLower(lines[i]);
-                                                            if (name_to_ID.count(cardName)==1){
-                                                                sideCards.push_back(cardName);
-                                                            }else{
-                                                                missingSide.push_back(lines[i]);
-                                                            }
-                                                        }
-                                                        if (lines.size()>1+mainCount+1+extraCount+1+sideCount){
-                                                            if (std::all_of(lines[1+mainCount+1+extraCount+1+sideCount].begin(), lines[1+mainCount+1+extraCount+1+sideCount].end(), ::isdigit)){
-                                                                unknownValue=std::stoi(lines[1+mainCount+1+extraCount+1+sideCount]);
-                                                            }
-                                                        }
-                                                        readableDeck=true;
-                                                    }
-                                                }else{
-                                                    infoString="Could not read Side Deck size!";
-                                                }
-                                            }
-                                        }else{
-                                            infoString="Could not read Extra Deck size!";
-                                        }
-                                    }
-                                }else{
-                                    infoString="Could not read Main Deck size!";
-                                }
-                            }
-                        if (readableDeck){
-                            mainCount-=missingMain.size();
-                            extraCount-=missingExtra.size();
-                            sideCount-=missingSide.size();
-                            bool abort=false;
-                            if (!checkedDontCheckDeckSize){
-                                if (mainCount <40 || mainCount >60){
-                                    infoString="Main Deck must be between 40 and 60 cards";
-                                    abort=true;
-                                }else if (extraCount <0 || extraCount >15){
-                                    infoString="Extra Deck must be between 0 and 15 cards";
-                                    abort=true;
-                                }else if (sideCount <0 || sideCount >15){
-                                    infoString="Side Deck must be between 0 and 15 cards";
-                                    abort=true;
-                                }
-                                if (abort){
-                                    std::ofstream missingFile("missingCards.txt");
-                                    if (missingFile.is_open()){
-                                        for (int i=0;i<missingMain.size();i++){
-                                            missingFile << missingMain[i] << "\n";
-                                        }
-                                        for (int i=0;i<missingExtra.size();i++){
-                                            missingFile << missingExtra[i] << "\n";
-                                        }
-                                        for (int i=0;i<missingSide.size();i++){
-                                            missingFile << missingSide[i] << "\n";
-                                        }
-                                        missingFile.close();
-                                        infoString+=", check missingCards.txt for omitted cards";
-                                    }else{
-                                        infoString+=", also note that some cards could not be identified";
-                                    }
-                                }
-                            }
-                            if (!abort){
-                                std::string ydcFilename=SaveFilename("YGO LOTD LE YDC Deck Files (*.ydc)\0*.*\0");
-                                if (!ydcFilename.empty()){
-                                    std::ofstream ydcFile(ydcFilename,std::ios::out|std::ios::binary);
-                                    if (ydcFile.is_open()){
-                                        WriteLong(ydcFile,unknownValue);
-                                        WriteShort(ydcFile,mainCount);
-                                        for (int i=0;i< mainCount;i++){
-                                            WriteShort(ydcFile,name_to_ID[mainCards[i]]);
-                                        }
-                                        WriteShort(ydcFile,extraCount);
-                                        for (int i=0;i< extraCount;i++){
-                                            WriteShort(ydcFile,name_to_ID[extraCards[i]]);
-                                        }
-                                        WriteShort(ydcFile,sideCount);
-                                        for (int i=0;i< sideCount;i++){
-                                            WriteShort(ydcFile,name_to_ID[sideCards[i]]);
-                                        }
-                                        ydcFile.close();
-                                        if (missingMain.empty() && missingExtra.empty() && missingSide.empty()){
-                                            infoString="Successfully exported the deck to "+ydcFilename;
-                                        }else{
-                                            std::ofstream missingFile("missingCards.txt");
-                                            if (missingFile.is_open()){
-                                                for (int i=0;i<missingMain.size();i++){
-                                                    missingFile << missingMain[i] << "\n";
-                                                }
-                                                for (int i=0;i<missingExtra.size();i++){
-                                                    missingFile << missingExtra[i] << "\n";
-                                                }
-                                                for (int i=0;i<missingSide.size();i++){
-                                                    missingFile << missingSide[i] << "\n";
-                                                }
-                                                missingFile.close();
-                                                infoString="Partially exported deck to "+ydcFilename+", check missingCards.txt for omitted cards";
-                                            }else{
-                                                infoString="Partially exported deck to "+ydcFilename+", but some cards could not be identified";
-                                            }
-                                        }
-                                    }else{
-                                        infoString="Unable to open " + ydcFilename;
-                                    }
-                                }else{
-                                    infoString="Canceled file dialog";
-                                }
+                                infoString="Canceled file dialog";
                             }
                         }
                     }else{

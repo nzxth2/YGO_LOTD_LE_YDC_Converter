@@ -6,33 +6,38 @@
  - Converts said .txt files back to .ydc files
  - Allows for modification of existing decks or addition of new decks
  - Deck size check is optional, disable at your own risk
- - Capitalization and spacing in .txt files are ignored while converting to .ydc, so you don't have to worry about that
+ - Capitalization and spacing in card names ignored while converting to .ydc, so you don't have to worry about that
  - If a card in a .txt file can not be identified, it will be recorded in missingCards.txt
  - Check the /extra directory in the repository for a mass-converted list of all decks
   
  ### TXT File Format
  ```
- # main deck. first the card count, then the list
- 40
+ [main]
  CardName1
  .
  .
  .
  CardName40
- # extra deck. first the card count, then the list
- 15
+ [extra]
  CardName1
  .
  .
  .
  CardName15
- # side deck. first the card count, then the list
+ [side]
+ CardName1
+ .
+ .
+ .
+ CardName15
+ [unknown]
  0
- # unknown value. leave it as it is or set it to 0. alternatively just omit the line
- 25740
  ```
   
- Note that comments start with `#` and are always ignored, as are empty lines
+ Note that comments start with `#` and are always ignored, as are empty lines  
+ The headers [main], [extra] and [side] mark the start of the main, extra and side deck respectively. 
+ The [unknown] header is for a field that I haven't figured out yet, seems to have no effect either. 
+ Leave as it is or set it to 0. Alternatively just omit the [unknown] header and corresponding value.
  
 ## Building
   Not crossplatform at all, only builds for Windows  
